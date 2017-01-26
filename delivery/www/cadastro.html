@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2016 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+	<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css"> 
+	<script src="js/jquery.min.js"></script> 
+	<script src="js/jquery.mobile-1.4.5.min.js"></script>
+	<script src="phonegap.js"></script>
+    <title>Delivery</title>
+
+</head>
+<body>
+
+<div data-role="page" id="page">
+
+		<div data-role="header" data-position="fixed" id="fundo">
+			<h1><img src="img/logo.png" width="100%" height="100%"></h1>
+			<a href="#outside" class="ui-btn ui-shadow ui-corner-all ui-icon-bars ui-btn-icon-notext ui-btn-inline">Minus</a>
+		</div><!-- /header -->
+
+		<div role="main" class="ui-content">
+		  <form id="cadastro">
+		    
+			<input data-clear-btn="true" type="email" name="usuario" id="usuario" value="" placeholder="Email" required>
+			<input type="password" data-clear-btn="true" name="senha" id="senha" value="" placeholder="Senha" required>
+			<input data-clear-btn="true" name="nome" id="nome" value="" placeholder="Nome" required>
+			<input data-clear-btn="true" name="fone" id="fone" value="" placeholder="Fone" required>
+			<input data-clear-btn="true" name="cep" id="cep" value="" placeholder="Cep" required>
+			<input data-clear-btn="true" name="numero" id="numero" value="" placeholder="Numero" required>
+			<input data-clear-btn="true" name="rua" id="rua" value="" placeholder="Rua" required>
+			<input data-clear-btn="true" name="bairro" id="bairro" value="" placeholder="bairrp" required>
+			<a href="#" class="ui-btn" id="cad">Cadastrar</a>
+		  </form>
+		</div><!-- /content -->
+
+		<div data-role="footer" data-position="fixed">
+			<h4 class="controler">partiupizza delivery</h4>
+		</div><!-- /footer -->
+        <div data-role="panel" id="outside">
+            <ul data-role="listview">
+                <li data-icon="back"><a href="#" data-rel="close">Fechar</a></li>
+                <li><a href="#" id="clicar">Login</a></li>
+                <li><a href="#" class="sair">Sair</a></li>
+            </ul>
+        </div> 
+	</div><!-- /page -->
+	
+	<script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript">
+        app.initialize();
+    </script>
+</body>
+</html>
+<script>
+$(document).ready(function(){
+   $('#cad').click(function(){
+	var formula = $('#cadastro').serialize();
+
+		$.ajax({
+			type: 'POST',
+			url: "http://partiupizza.com/webservice/cadastro.php",
+			data: formula,
+			crossDomain: true,
+			error: function (request, status, erro) {
+				alert("Problema ocorrido: " + status + "\nDescição: " + erro);
+				//Abaixo está listando os header do conteudo que você requisitou, só para confirmar se você setou os header e dataType corretos
+				alert("Informações da requisição: \n" + request.getAllResponseHeaders());
+			},
+			success: function(data){
+				//alert(data);
+				if(data == 0){
+					alert('Erro ao cadastrar! Verifique os dados e tente novamente');
+				}
+				if(data == 1){
+					alert('Cadastro realizado com sucesso! Faça login no nosso app para aproveitar nossos sabores.');
+					window.location.href = "index.html";
+				}
+				if(data == 2){
+					alert('Erro ao cadastrar! Email já cadastrado!');
+				}
+				
+			}
+		});
+    });
+	
+	$("#numero").blur(function(){
+					$("#rua").val("...");
+					$("#bairro").val("...");
+					$("#res").html("Procurando seu endereço...");
+					$("#cidade").val("...");
+					$("#uf").val("...");
+			
+					consulta = $("#cep").val();
+					$.getJSON("http://viacep.com.br/ws/"+consulta+"/json/?callback=?", function(dados){
+							
+						   
+							//alert(dados.logradouro);
+
+							$("#rua").val(dados.logradouro);
+							$("#bairro").val(dados.bairro);
+							$("#cidade").val(dados.localidade);
+							$("#uf").val(dados.uf);
+							var bairro = $("#bairro").val(dados.bairro);
+							$.post('http://hussolucoes.tempsite.ws/webservice/pega_taxa.php',{bairro:bairro},function(data){
+								// resto do código
+								//alert('entrou');
+								if(data != ""){
+								   $("#res").html('Valor da taxa: <b>'+data);
+								   $("#tax").val(data);
+								}else{
+								   alert("Desculpe, ainda não entregamos nesse endereço.");
+								   window.location.href = "?page=cardapio";
+								}
+								
+							});
+							
+					});
+						
+                });
+
+   $('#clicar').click(function(){
+     window.location.href = "index.html";
+   });
+   
+   $('#sobre').click(function(){
+     window.location.href = "info.html";
+   });
+   
+   $('.sair').click(function(){
+     navigator.app.exitApp();
+   });
+   $('#consultar').click(function(){
+     window.location.href = "principal.html#info-ped";
+});
+   
+});
+</script>
